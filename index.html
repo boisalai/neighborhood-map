@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Neighborhood Map</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Alain Boisvert">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/app.css">
+  </head>
+  <body>
+    <div class="container">
+    </div>
+
+    <div class="row">
+      <div class="col-lg-3">
+        <!--
+        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for names.."><br>
+        -->
+        <input id="myInput" data-bind="value: abc, event: { 'keyup': search }" 
+          placeholder="Search for names.."/>
+        
+        <ul id="myList">
+          <li><a href="#">Adele</a></li>
+          <li><a href="#">Agnes</a></li>
+        
+          <li><a href="#">Billy</a></li>
+          <li><a href="#">Bob</a></li>
+        
+          <li><a href="#">Calvin</a></li>
+          <li><a href="#">Christina</a></li>
+          <li><a href="#">Cindy</a></li>
+        </ul>
+
+      </div>
+      <div class="col-lg-9">
+        <div id="myMap">
+        </div> 
+      </div>
+    </div>
+
+    <!--
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+    -->
+
+    
+    <script src="scripts/knockout-3.4.2.js"></script>
+    <script src="scripts/test.js"></script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2_z9cHqZM3qbYTgSo6pQ25BpiQCKe5gI&v=3&callback=initMap">
+    </script>
+  </body>
+</html>
