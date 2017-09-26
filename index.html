@@ -16,24 +16,14 @@
 
     <div class="row">
       <div class="col-lg-3">
-        <!--
-        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for names.."><br>
-        -->
-        <input id="myInput" data-bind="value: abc, event: { 'keyup': search }" 
-          placeholder="Search for names.."/>
+        <input id="myInput" data-bind="event: { 'keyup': search }" 
+          placeholder="Search for names..."/>
         
-        <ul id="myList">
-          <li><a href="#">Adele</a></li>
-          <li><a href="#">Agnes</a></li>
-        
-          <li><a href="#">Billy</a></li>
-          <li><a href="#">Bob</a></li>
-        
-          <li><a href="#">Calvin</a></li>
-          <li><a href="#">Christina</a></li>
-          <li><a href="#">Cindy</a></li>
+        <ul id="myList" data-bind="foreach: locations">
+          <li>
+            <a href="#" data-bind="click: $parent.showMark"><span data-bind="text: title"></span></a>
+          </li>
         </ul>
-
       </div>
       <div class="col-lg-9">
         <div id="myMap">
@@ -41,13 +31,6 @@
       </div>
     </div>
 
-    <!--
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-    -->
-
-    
     <script src="scripts/knockout-3.4.2.js"></script>
     <script src="scripts/test.js"></script>
     <script async defer
