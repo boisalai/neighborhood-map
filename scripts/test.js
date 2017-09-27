@@ -2,11 +2,11 @@
 	"use strict";
 
   var map;
+  var infowindow;
+  var bounds;
 
   // Create a new blank array for all the listing markers.
   var markers = [];
-
-  var largeInfowindow = null;
 
   // These are the real estate listings that will be shown to the user.
   // Normally we'd have these in a database instead.
@@ -15,28 +15,46 @@
      location: {lat: 40.768236, lng: -73.971566},
      fact: "The Central Park Zoo is a small 6.5-acre zoo located in Central Park"
             + " in New York City. It is part of an integrated system of four zoos"
-            + " and the New York Aquarium managed by the Wildlife Conservation..."
-            + " <a href='https://en.wikipedia.org/wiki/Central_Park_Zoo' target='_blank'>Wikipedia</a>"
+            + " and the New York Aquarium managed by the Wildlife Conservation...",
+     source_url: "https://en.wikipedia.org/wiki/Central_Park_Zoo",
+     source_name: "Wikipedia"
     },
-    {title: "Chelsea Loft", 
-     location: {lat: 40.7444883, lng: -73.9949465},
-     fact: "Abcdefg"
+    {title: "Empire State Building", 
+     location: {lat: 40.748504, lng: -73.985599},
+     fact: "The Empire State Building is a 102-story skyscraper located on Fifth Avenue"
+            + " between West 33rd and 34th Streets in Midtown, Manhattan, New York City.",
+     source_url: "https://en.wikipedia.org/wiki/Empire_State_Building",
+     source_name: "Wikipedia"
     },
-    {title: "Union Square Open Floor Plan", 
-     location: {lat: 40.7347062, lng: -73.9895759},
-     fact: "Abcdefg"
+    {title: "Madison Square Garden", 
+     location: {lat: 40.750585, lng: -73.993238},
+     fact: 'Madison Square Garden, often called "MSG" or simply "The Garden", is a multi-purpose'
+            + ' indoor arena in the New York City borough of Manhattan.',
+     source_url: "https://en.wikipedia.org/wiki/Madison_Square_Garden",
+     source_name: "Wikipedia"
     },
-    {title: "East Village Hip Studio", 
-     location: {lat: 40.7281777, lng: -73.984377},
-     fact: "Abcdefg"
+    {title: "Times Square", 
+     location: {lat: 40.758879, lng: -73.985271},
+     fact: 'Times Square is a major commercial intersection, tourist destination, entertainment'
+            + ' center and neighborhood in the Midtown Manhattan section of New York City at'
+            + ' the junction of Broadway and Seventh Avenue.',
+     source_url: "https://en.wikipedia.org/wiki/Times_Square",
+     source_name: "Wikipedia"
     },
-    {title: "TriBeCa Artsy Bachelor Pad", 
-     location: {lat: 40.7195264, lng: -74.0089934},
-     fact: "Abcdefg"
+    {title: "Rockefeller Center", 
+     location: {lat: 40.758740, lng: -73.978684},
+     fact: 'Rockefeller Center is a large complex consisting of 19 high-rise commercial buildings'
+            + ' covering 22 acres between 48th and 51st Streets in New York City.',
+     source_url: "https://en.wikipedia.org/wiki/Rockefeller_Center",
+     source_name: "Wikipedia"
     },
-    {title: "Chinatown Homey Space", 
-     location: {lat: 40.7180628, lng: -73.9961237},
-     fact: "Abcdefg"
+    {title: "9/11 Memorial", 
+     location: {lat: 40.711467, lng: -74.012740},
+     fact: 'The National September 11 Memorial & Museum are a memorial and museum in New York City'
+            + ' commemorating the September 11, 2001 attacks, which killed 2,977 victims, and the'
+            + ' World Trade Center bombing of 1993, which killed six.',
+     source_url: "https://en.wikipedia.org/wiki/National_September_11_Memorial_%26_Museum",
+     source_name: "Wikipedia"
     }
   ];
 
@@ -47,8 +65,9 @@
       zoom: 13
     });
 
-    largeInfowindow = new google.maps.InfoWindow();
-    var bounds = new google.maps.LatLngBounds();
+    infowindow = new google.maps.InfoWindow();
+
+    bounds = new google.maps.LatLngBounds();
 
     // The following group uses the location array to create an array of markers on initialize.
     for (var i = 0; i < locations.length; i++) {
@@ -72,7 +91,7 @@
 
       // Create an onclick event to open an infowindow at each marker.
       marker.addListener("click", function() {
-        populateInfoWindow(this, largeInfowindow);
+        populateInfoWindow(this, infowindow);
       });
     }
     
@@ -87,7 +106,8 @@
     // Check to make sure the infowindow is not already opened on this marker.
     if (infowindow.marker != marker) {
       infowindow.marker = marker;
-      infowindow.setContent("<b>" + marker.title + "</b><br>" + locations[marker.id].fact);
+      infowindow.setContent("<b>" + marker.title + "</b><br>" + locations[marker.id].fact 
+        + '<a href="' + locations[marker.id].source_url + '" target="_blank">' + locations[marker.id].source_name + '</a>');
       infowindow.open(map, marker);
       // Make sure the marker property is cleared if the infowindow is closed.
       infowindow.addListener("closeclick", function() {
@@ -107,18 +127,14 @@
       var filter = input.value.toUpperCase();
       var ul = document.getElementById("myList");
       var li = ul.getElementsByTagName("li");
-
-      var bounds = new google.maps.LatLngBounds();
   
       // Loop through all list items, and hide those who don't match the search query
       for (var i = 0; i < li.length; i++) {
         var a = li[i].getElementsByTagName("a")[0];
         if (a.innerHTML.toUpperCase().indexOf(filter) > -1) {
           li[i].style.display = "";
-          // Create an onclick event to open an infowindow at each marker.
-          locations[i].marker.addListener("click", function() {
-            populateInfoWindow(locations[i].marker, largeInfowindow);
-          });
+          markers[i].setMap(map);
+          bounds.extend(markers[i].position);
         } else {
           li[i].style.display = "none";
           markers[i].setMap(null);
@@ -127,7 +143,6 @@
     }
 
     self.showMark = function() {
-      var infowindow = largeInfowindow;
       infowindow.marker = this.marker;
       infowindow.setContent("<b>" + this.title + "</b><br>" + this.fact);
       infowindow.open(map, this.marker);
