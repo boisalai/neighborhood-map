@@ -7,34 +7,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="Alain Boisvert">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" 
+      integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
     <link rel="stylesheet" href="css/app.css">
   </head>
   <body>
-    <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light">
+      <a class="navbar-brand" href="#">Neighborhood Map</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" 
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </nav>
+
+    <div class="content">
+      <div class="row">
+        <div class="col-lg-3">
+          <form class="myForm">
+            <input id="myInput" class="form-control mr-sm-2" data-bind="event: {'keyup': search}" placeholder="Search" aria-label="Search" />
+            <button class="btn btn-outline-success" data-bind="click: reset">Reset</button>
+          </form>
+
+          <p class="subtitle">Locations</p>
+          <div id="myLocations" class="list-group" data-bind="foreach: locations">
+            <a href="#" class="list-group-item list-group-item-action" data-bind="text: title, click: $parent.showLocationInfo"></a>
+          </div>
+
+          <p class="subtitle" data-bind="visible: topPicks().length > 0">Foursquare top picks</p>
+          <div id="myTopPicks" class="list-group" data-bind="foreach: topPicks">
+            <a href="#" class="list-group-item list-group-item-action" data-bind="text: name, click: $parent.showFoursquareInfo"></a>
+          </div>
+
+        </div>
+        <div class="col-lg-9">
+          <div id="myMap">
+          </div> 
+        </div>
+      </div>
     </div>
 
-    <div class="row">
-      <div class="col-lg-3">
-        <input id="myInput" data-bind="event: { 'keyup': search }" 
-          placeholder="Search for names..."/>
-        
-        <ul id="myList" data-bind="foreach: locations">
-          <li>
-            <a href="#" data-bind="click: $parent.showMark"><span data-bind="text: title"></span></a>
-          </li>
-        </ul>
-      </div>
-      <div class="col-lg-9">
-        <div id="myMap">
-        </div> 
-      </div>
-    </div>
+    <footer class="footer">
+      <p>This page was last modified on 5 August 2017, at 9:48 EDT.
+        The repository is <a href="https://github.com/boisalai/neighborhood-map" target="_blank">here</a>.</p>
+    </footer>
 
-    <script src="scripts/knockout-3.4.2.js"></script>
-    <script src="scripts/test.js"></script>
+    <!-- bootstrap#v4.0.0-beta -->
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"></script>
+    
+    <!-- knockout -->
+    <script src="lib/knockout-3.4.2.js"></script>
+
+    <!-- app -->
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- google maps callback -->
     <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2_z9cHqZM3qbYTgSo6pQ25BpiQCKe5gI&v=3&callback=initMap">
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2_z9cHqZM3qbYTgSo6pQ25BpiQCKe5gI&v=3&callback=startApp">
     </script>
   </body>
 </html>

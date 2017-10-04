@@ -6,6 +6,20 @@ body {
   padding: 0;
 }
 
+.navbar {
+  background-color: #f6f6f6 !important;
+}
+
+.content {
+  margin: 12px 0;
+}
+
+.myForm {
+  display: flex;
+  flex-flow: row nowrap;
+  margin-bottom: 12px; 
+}
+
 #myInput {
   background-image: url('searchicon.png'); 
   background-position: 10px 12px; 
@@ -14,29 +28,15 @@ body {
   font-size: 16px; 
   padding: 12px 20px 12px 40px; 
   border: 1px solid #ddd; 
-  margin-bottom: 12px; 
 }
 
-#myList {
-  /* Remove default list styling */
-  list-style-type: none;
-  padding: 0;
+p.subtitle {
+  font-weight: bold;
   margin: 0;
 }
 
-#myList li a {
-  border: 1px solid #ddd; 
-  margin-top: -1px; /* Prevent double borders */
-  background-color: #f6f6f6; 
-  padding: 12px; 
-  text-decoration: none; 
-  font-size: 18px; 
-  color: black; 
-  display: block; 
-}
-
-#myList li a:hover:not(.header) {
-  background-color: #eee; 
+#myLocations {
+  margin-bottom: 12px;
 }
 
 #myMap {
@@ -45,3 +45,11 @@ body {
   height: 100%;
 }
 
+.footer {
+  border-top: 1px solid black;
+}
+
+.footer p {
+  margin-top: 3px;
+  font-size: 12px;
+}
