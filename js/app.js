@@ -16,7 +16,7 @@ var ViewModel = function() {
   for (var i = 0; i < locations.length; i++) {
     // Create a marker for this location.
     var marker = new google.maps.Marker({
-      mp: map,
+      map: map,
       position: locations[i].position,
       title: locations[i].title,
       animation: google.maps.Animation.DROP,
@@ -30,10 +30,16 @@ var ViewModel = function() {
     locations[i].marker = marker;
 
     // Create an onclick event to open an infowindow at each marker.
-    marker.addListener("click", function() {
-      self.showInfoWindow(this);
-    });
+    //marker.addListener("click", function() {
+    //  self.showInfoWindow(this);
+    //});
   }
+
+  locations.forEach(function(location) {
+    location.marker.addListener("click", function() {
+      self.showInfoWindow(location.marker);
+    });
+  });
 
   // Extend the boundaries of the map for each marker.
   map.fitBounds(bounds);
@@ -46,14 +52,14 @@ var ViewModel = function() {
     if (marker) {
       marker.setMap(map);
     }
-  }
+  };
 
   // Show marker on google map.
   self.hideMarker = function(marker) {
     if (marker) {
       marker.setMap(null);
     }
-  }
+  };
 
   self.search = function(data, event) {
     var input = document.getElementById("myInput");
@@ -71,7 +77,7 @@ var ViewModel = function() {
         self.hideMarker(locations[i].marker);
       }
     }
-  }
+  };
  
   // Reset the user interface.
   self.reset = function() {
@@ -103,25 +109,30 @@ var ViewModel = function() {
 
     // Remove all foursquare top picks.
     self.topPicks.removeAll();
-  }
+  };
 
   // Show infowindow.
   // Check to make sure the infowindow is not already opened on this marker.
   self.showInfoWindow = function(marker) {
     if (infowindow.marker != marker) {
+      if (infowindow.marker) {
+        infowindow.marker.setAnimation(null);
+      }
       infowindow.marker = marker;
-      infowindow.setContent("<b>" + marker.title + "</b><br>"
-        + locations[marker.id].fact
-        + " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">"
-        + locations[marker.id].source_name + "</a>.");
+      infowindow.setContent("<b>" + marker.title + "</b><br>" + 
+        locations[marker.id].fact + 
+        " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">" + 
+        locations[marker.id].source_name + "</a>.");
       infowindow.open(map, marker);
+      marker.setAnimation(google.maps.Animation.BOUNCE);
 
       // Make sure the marker property is cleared if the infowindow is closed.
       infowindow.addListener("closeclick", function() {
         infowindow.marker = null;
+        marker.setAnimation(null);
       });
-    }
-  }
+    } 
+  };
 
   // Show location info window.
   self.showLocationInfo = function(item, event) {
@@ -155,8 +166,8 @@ var ViewModel = function() {
         "client_secret": "TFBK2JIU1YMZDMEJ2OL3F41P1Q0QSI051XWXBHTLO5JMSUX2",
         "v": "20161016"
     });
-    var query = "search?ll=" + this.position.lat + "," + this.position.lng
-    + "&locale=en&limit=5&section=topPicks&venuePhotos=1";
+    var query = "search?ll=" + this.position.lat + "," + this.position.lng + 
+      "&locale=en&limit=5&section=topPicks&venuePhotos=1";
     var url = foursquareUrl + query + "&" + foursquareParams;
 
     self.topPicks.removeAll();
@@ -165,7 +176,7 @@ var ViewModel = function() {
         self.topPicks.push(venue);
       });
     });
-  }
+  };
 
   // Show foursquare top pick info window.
   self.showTopPick = function(item, event) {
@@ -202,7 +213,7 @@ var ViewModel = function() {
 
     item.marker = marker;
     item.infowindow = infowindow;
-  }
+  };
 
   // Clear foursquare top pick info window.
   self.clearTopPick = function(item, event) {
@@ -218,16 +229,16 @@ var ViewModel = function() {
     item.infowindow = null;
     item.marker.setMap(null);
     item.marker = null;
-  }
-}
+  };
+};
 
 // Listen for authentication errors.
 var gm_authFailure = function() { 
-  $("#myMap").html("<div class=\"alert alert-danger\" role=\"alert\">"
-    + "We had trouble loading Google Maps. Please refresh your browser and try again."
-    + "</div>");
-}
+  $("#myMap").html("<div class=\"alert alert-danger\" role=\"alert\">" + 
+      "We had trouble loading Google Maps. Please refresh your browser and try again." + 
+      "</div>");
+};
 
 var startApp = function() {
   ko.applyBindings(new ViewModel());
-}
+};
