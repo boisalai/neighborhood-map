@@ -1,6 +1,6 @@
 # Neighborhood map
 
-Udacity project with [Knockout.js](http://knockoutjs.com/), [Google Maps APIs](https://developers.google.com/maps/) and [Foursquare API](https://developer.foursquare.com/docs).
+Udacity project with [Knockout.js](http://knockoutjs.com/), [Google Maps API](https://developers.google.com/maps/) and [Foursquare API](https://developer.foursquare.com/docs).
 
 ## Setup
 
@@ -13,9 +13,9 @@ and run index.html file in browser.
 
 - Google map loaded from Maps API.
 - Six locations in New York City.
-- Locations filter that uses an input field to filter both the list view and the map markers displayed. 
-- Locations list view and the markers updated accordingly in real time.
-- Five Foursquare top picks near each location displayed in a list view and as map markers. 
+- Location filter that uses an input field to filter both the list view and the map markers displayed. 
+- Location list view and the markers updated accordingly in real time.
+- Five Foursquare top picks near selected location displayed in a list view and as green map markers. 
 - Reset button to re-initialize page.
 - Warning message if trouble loading Google Maps.
 - Mobile responsive.

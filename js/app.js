@@ -10,13 +10,13 @@ var ViewModel = function() {
 
   // Instantiate some objects.
   var infowindow = new google.maps.InfoWindow();
-  var bounds = new google.maps.LatLngBounds(); 
+  var bounds = new google.maps.LatLngBounds();
   
   // Create marker for each location.
   for (var i = 0; i < locations.length; i++) {
     // Create a marker for this location.
     var marker = new google.maps.Marker({
-      map: map,
+      mp: map,
       position: locations[i].position,
       title: locations[i].title,
       animation: google.maps.Animation.DROP,
@@ -41,14 +41,14 @@ var ViewModel = function() {
   self.locations = ko.observableArray(locations);
   self.topPicks = ko.observableArray();
 
-  // Show marker on google map. 
+  // Show marker on google map.
   self.showMarker = function(marker) {
     if (marker) {
       marker.setMap(map);
     }
   }
 
-  // Show marker on google map. 
+  // Show marker on google map.
   self.hideMarker = function(marker) {
     if (marker) {
       marker.setMap(null);
@@ -83,7 +83,7 @@ var ViewModel = function() {
     var a = div.getElementsByTagName("a");
     for (var i = 0; i < a.length; i++) {
       a[i].style.display = "";
-      $(a[i]).removeClass('active');
+      $(a[i]).removeClass("active");
       self.showMarker(locations[i].marker);
       bounds.extend(locations[i].marker.position);
     }
@@ -110,9 +110,9 @@ var ViewModel = function() {
   self.showInfoWindow = function(marker) {
     if (infowindow.marker != marker) {
       infowindow.marker = marker;
-      infowindow.setContent("<b>" + marker.title + "</b><br>" 
-        + locations[marker.id].fact 
-        + " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">" 
+      infowindow.setContent("<b>" + marker.title + "</b><br>"
+        + locations[marker.id].fact
+        + " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">"
         + locations[marker.id].source_name + "</a>.");
       infowindow.open(map, marker);
 
@@ -134,11 +134,11 @@ var ViewModel = function() {
     var a = div.getElementsByTagName("a");
     for (var i = 0; i < a.length; i++) {
       if (i == index) {
-        $(a[i]).addClass('active');
+        $(a[i]).addClass("active");
         self.showMarker(locations[i].marker);
       } else {
         a[i].style.display = "none";
-        $(a[i]).removeClass('active');
+        $(a[i]).removeClass("active");
         self.hideMarker(locations[i].marker);
       }
     }
@@ -155,10 +155,10 @@ var ViewModel = function() {
         "client_secret": "TFBK2JIU1YMZDMEJ2OL3F41P1Q0QSI051XWXBHTLO5JMSUX2",
         "v": "20161016"
     });
-    var query = "search?ll=" + this.position.lat + "," + this.position.lng 
+    var query = "search?ll=" + this.position.lat + "," + this.position.lng
     + "&locale=en&limit=5&section=topPicks&venuePhotos=1";
     var url = foursquareUrl + query + "&" + foursquareParams;
-    
+
     self.topPicks.removeAll();
     $.getJSON(url, function(result, status) {
       $.each(result.response.venues, function(i, venue) {
@@ -212,7 +212,7 @@ var ViewModel = function() {
 
     var div = document.getElementById("myTopPicks");
     var a = div.getElementsByTagName("a");
-    $(a[i]).removeClass('active');
+    $(a[i]).removeClass("active");
 
     item.infowindow.marker = null;
     item.infowindow = null;
