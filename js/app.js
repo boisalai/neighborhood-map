@@ -28,11 +28,6 @@ var ViewModel = function() {
 
     // Keep marker object into location.
     locations[i].marker = marker;
-
-    // Create an onclick event to open an infowindow at each marker.
-    //marker.addListener("click", function() {
-    //  self.showInfoWindow(this);
-    //});
   }
 
   locations.forEach(function(location) {
