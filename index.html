@@ -24,8 +24,8 @@
       <div class="row">
         <div class="col-lg-3">
           <form class="myForm">
-            <input id="myInput" class="form-control mr-sm-2" data-bind="event: {'keyup': search}" placeholder="Search" aria-label="Search" />
-            <button class="btn btn-outline-success" data-bind="click: reset">Reset</button>
+            <input id="myInput" class="form-control mr-sm-2" data-bind="event: { keyup: search, focus: reset }" placeholder="Search" aria-label="Search" />
+            <button class="btn btn-outline-primary" data-bind="click: reset">Reset</button>
           </form>
 
           <p class="subtitle">Locations</p>
@@ -33,9 +33,12 @@
             <a href="#" class="list-group-item list-group-item-action" data-bind="text: title, click: $parent.showLocationInfo"></a>
           </div>
 
-          <p class="subtitle" data-bind="visible: topPicks().length > 0">Foursquare top picks</p>
-          <div id="myTopPicks" class="list-group" data-bind="foreach: topPicks">
-            <a href="#" class="list-group-item list-group-item-action" data-bind="text: name, click: $parent.showFoursquareInfo"></a>
+          <div data-bind="visible: topPicks().length > 0">
+            <p class="subtitle" >Foursquare top picks</p>
+            <div id="myTopPicks" class="list-group" data-bind="foreach: topPicks">
+              <a href="#" class="list-group-item list-group-item-action" 
+                data-bind="text: name, event: { mouseover: $parent.showTopPick, mouseout: $parent.clearTopPick }"></a>
+            </div>
           </div>
 
         </div>
@@ -47,7 +50,7 @@
     </div>
 
     <footer class="footer">
-      <p>This page was last modified on 5 August 2017, at 9:48 EDT.
+      <p>Last updated: October 5th, 2017, at 20:14 EDT.
         The repository is <a href="https://github.com/boisalai/neighborhood-map" target="_blank">here</a>.</p>
     </footer>
 

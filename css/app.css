@@ -39,6 +39,10 @@ p.subtitle {
   margin-bottom: 12px;
 }
 
+#myTopPicks {
+  margin-bottom: 12px;
+}
+
 #myMap {
   border: 1px solid #ddd; 
   min-height: 600px;

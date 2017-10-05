@@ -1,51 +1,16 @@
-"use strict";
-var map;
-var infowindow;
-var bounds;
+var ViewModel = function() {
+  var self = this;
 
-// Create a new map - only center and zoom are required.
-var createMap = function() {
-  map = new google.maps.Map(document.getElementById("myMap"), {
+  // Create map.
+  var map = new google.maps.Map(document.getElementById("myMap"), {
     zoom: 10,
     center: new google.maps.LatLng(0, 0),
     mapTypeId: google.maps.MapTypeId.ROADMAP,
   });
 
-  infowindow = new google.maps.InfoWindow();
-  bounds = new google.maps.LatLngBounds(); 
-}
-
-// Show marker on google map. 
-var showMarker = function(marker) {
-  if (marker) {
-    marker.setMap(map);
-  }
-}
-
-// This function populates the infowindow when the marker is clicked. We'll 
-// only allow one infowindow which will open at the marker that is clicked, 
-// and populate based on that markers position.
-var showInfoWindow = function(marker) {
-  // Check to make sure the infowindow is not already opened on this marker.
-  if (infowindow.marker != marker) {
-    infowindow.marker = marker;
-    infowindow.setContent("<b>" + marker.title + "</b><br>" + locations[marker.id].fact 
-      + " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">" 
-      + locations[marker.id].source_name + "</a>.");
-    infowindow.open(map, marker);
-
-    // Make sure the marker property is cleared if the infowindow is closed.
-    infowindow.addListener("closeclick", function() {
-      infowindow.setMarker = null;
-    });
-  }
-}
-
-var ViewModel = function() {
-  var self = this;
-
-  // Create map.
-  createMap();
+  // Instantiate some objects.
+  var infowindow = new google.maps.InfoWindow();
+  var bounds = new google.maps.LatLngBounds(); 
   
   // Create marker for each location.
   for (var i = 0; i < locations.length; i++) {
@@ -66,7 +31,7 @@ var ViewModel = function() {
 
     // Create an onclick event to open an infowindow at each marker.
     marker.addListener("click", function() {
-      showInfoWindow(this);
+      self.showInfoWindow(this);
     });
   }
 
@@ -75,6 +40,20 @@ var ViewModel = function() {
 
   self.locations = ko.observableArray(locations);
   self.topPicks = ko.observableArray();
+
+  // Show marker on google map. 
+  self.showMarker = function(marker) {
+    if (marker) {
+      marker.setMap(map);
+    }
+  }
+
+  // Show marker on google map. 
+  self.hideMarker = function(marker) {
+    if (marker) {
+      marker.setMap(null);
+    }
+  }
 
   self.search = function(data, event) {
     var input = document.getElementById("myInput");
@@ -86,10 +65,10 @@ var ViewModel = function() {
     for (var i = 0; i < a.length; i++) {
       if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
         a[i].style.display = "";
-        showMarker(locations[i].marker);
+        self.showMarker(locations[i].marker);
       } else {
         a[i].style.display = "none";
-        hideMarker(locations[i].marker);
+        self.hideMarker(locations[i].marker);
       }
     }
   }
@@ -105,7 +84,7 @@ var ViewModel = function() {
     for (var i = 0; i < a.length; i++) {
       a[i].style.display = "";
       $(a[i]).removeClass('active');
-      showMarker(locations[i].marker);
+      self.showMarker(locations[i].marker);
       bounds.extend(locations[i].marker.position);
     }
 
@@ -119,121 +98,136 @@ var ViewModel = function() {
     // Close infowindow.
     if (infowindow) {
       infowindow.close();
+      infowindow.marker = null;
     }
 
     // Remove all foursquare top picks.
     self.topPicks.removeAll();
   }
 
-  // Show info window
-  self.showLocationInfo = function(index) {
+  // Show infowindow.
+  // Check to make sure the infowindow is not already opened on this marker.
+  self.showInfoWindow = function(marker) {
+    if (infowindow.marker != marker) {
+      infowindow.marker = marker;
+      infowindow.setContent("<b>" + marker.title + "</b><br>" 
+        + locations[marker.id].fact 
+        + " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">" 
+        + locations[marker.id].source_name + "</a>.");
+      infowindow.open(map, marker);
+
+      // Make sure the marker property is cleared if the infowindow is closed.
+      infowindow.addListener("closeclick", function() {
+        infowindow.marker = null;
+      });
+    }
+  }
+
+  // Show location info window.
+  self.showLocationInfo = function(item, event) {
+    // Get current item index.
+    var context = ko.contextFor(event.target);
+    var index = context.$index();
+
+    // Show or hide list item.
     var div = document.getElementById("myLocations");
     var a = div.getElementsByTagName("a");
     for (var i = 0; i < a.length; i++) {
-      if (i == this.marker.id) {
-        $(a[this.marker.id]).addClass('active');
+      if (i == index) {
+        $(a[i]).addClass('active');
+        self.showMarker(locations[i].marker);
       } else {
         a[i].style.display = "none";
         $(a[i]).removeClass('active');
+        self.hideMarker(locations[i].marker);
       }
     }
     
-    showInfoWindow(this.marker);
+    // Zoom, set marker as center, and show infowindow.
+    map.setCenter(item.marker.getPosition());
+    map.setZoom(16);
+    self.showInfoWindow(item.marker);
     
+    // Get 5 top picks from Foursquare.
     var foursquareUrl = "https://api.foursquare.com/v2/venues/";
     var foursquareParams = $.param({
         "client_id": "LOW1I1K4BFN15QLOYPA5QXG24ZYRG0AIF5XYDX1PG3P3A5QJ",
         "client_secret": "TFBK2JIU1YMZDMEJ2OL3F41P1Q0QSI051XWXBHTLO5JMSUX2",
         "v": "20161016"
     });
+    var query = "search?ll=" + this.position.lat + "," + this.position.lng 
+    + "&locale=en&limit=5&section=topPicks&venuePhotos=1";
+    var url = foursquareUrl + query + "&" + foursquareParams;
     
     self.topPicks.removeAll();
-     
-    var query = "search?ll=" + this.position.lat + "," + this.position.lng 
-                + "&locale=en&limit=5&section=topPicks&venuePhotos=1";
-    var url = foursquareUrl + query + "&" + foursquareParams;
     $.getJSON(url, function(result, status) {
       $.each(result.response.venues, function(i, venue) {
-        console.log(venue);
         self.topPicks.push(venue);
       });
     });
   }
 
-  self.showTopPickInfo = function() {
+  // Show foursquare top pick info window.
+  self.showTopPick = function(item, event) {
+    // Get current item index.
+    var context = ko.contextFor(event.target);
+    var index = context.$index();
+
     var div = document.getElementById("myTopPicks");
     var a = div.getElementsByTagName("a");
     for (var i = 0; i < a.length; i++) {
-      if (i == this.marker.id) {
-        $(a[this.marker.id]).addClass('active');
+      if (i == index) {
+        $(a[i]).addClass('active');
       } else {
-        a[i].style.display = "none";
         $(a[i]).removeClass('active');
       }
     }
+
+    var position = new google.maps.LatLng(item.location.lat, item.location.lng);
+
+    // Create a marker for this location.
+    var marker = new google.maps.Marker({
+      map: map,
+      position: position,
+      title: item.name,
+      animation: google.maps.Animation.DROP,
+      icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+    });
+
+    var infowindow = new google.maps.InfoWindow({
+      marker: marker,
+      content: item.name
+    });
+    infowindow.open(map, marker);
+
+    item.marker = marker;
+    item.infowindow = infowindow;
+  }
+
+  // Clear foursquare top pick info window.
+  self.clearTopPick = function(item, event) {
+    // Get current item index.
+    var context = ko.contextFor(event.target);
+    var index = context.$index();
+
+    var div = document.getElementById("myTopPicks");
+    var a = div.getElementsByTagName("a");
+    $(a[i]).removeClass('active');
+
+    item.infowindow.marker = null;
+    item.infowindow = null;
+    item.marker.setMap(null);
+    item.marker = null;
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Error handling if map doesn't load.
-var errorHandler = function() {
-  $('#myMap').html('We had trouble loading Google Maps. Please refresh your browser and try again.');
-}
-
-var startApp = function() {
-  ko.applyBindings(new ViewModel());
-}
-
-function gm_authFailure() { 
+// Listen for authentication errors.
+var gm_authFailure = function() { 
   $("#myMap").html("<div class=\"alert alert-danger\" role=\"alert\">"
     + "We had trouble loading Google Maps. Please refresh your browser and try again."
     + "</div>");
 }
 
-var clearMarkers = function() {
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setMap(null);
-  }
-  markers = [];
+var startApp = function() {
+  ko.applyBindings(new ViewModel());
 }
-
-
-
-
-
-// Hide marker from the map.
-var hideMarker = function(marker) {
-  if (marker) {
-    marker.setMap(null);
-  }
-};
-
-
-
-// See https://developers.google.com/maps/documentation/javascript/examples/marker-animations-iteration
-function addFoursquareMarkerWithTimeout(position, timeout) {
-  window.setTimeout(function() {
-    var marker = new google.maps.Marker({
-      map: map,
-      position: position,
-      animation: google.maps.Animation.DROP
-    });
-    markers.push(marker);
-    bounds.extend(position);
-    map.fitBounds(bounds);    
-  }, timeout);
-}
-
