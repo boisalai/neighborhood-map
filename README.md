@@ -7,6 +7,8 @@ Udacity project with [Knockout.js](http://knockoutjs.com/), [Google Maps APIs](h
 Clone or download this [repository](https://github.com/boisalai/neighborhood-map) 
 and run index.html file in browser.
 
+![alt text](screen.png "Print screen")
+
 ## Some functionalities
 
 - Google map loaded from Maps API.
