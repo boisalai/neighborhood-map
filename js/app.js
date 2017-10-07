@@ -1,3 +1,7 @@
+/*
+locations ou self.locations
+*/
+
 var ViewModel = function() {
   var self = this;
 
@@ -11,9 +15,13 @@ var ViewModel = function() {
   // Instantiate some objects.
   var infowindow = new google.maps.InfoWindow();
   var bounds = new google.maps.LatLngBounds();
-  
+
   // Create marker for each location.
   for (var i = 0; i < locations.length; i++) {
+    // Add "visible" and "active" properties to location.
+    locations[i].visible = ko.observable(true);
+    locations[i].active = ko.observable(false);
+
     // Create a marker for this location.
     var marker = new google.maps.Marker({
       map: map,
@@ -30,14 +38,15 @@ var ViewModel = function() {
     locations[i].marker = marker;
   }
 
+  // Extend the boundaries of the map for each marker.
+  map.fitBounds(bounds);
+
+  // Add click listener to the marker.
   locations.forEach(function(location) {
     location.marker.addListener("click", function() {
       self.showInfoWindow(location.marker);
     });
   });
-
-  // Extend the boundaries of the map for each marker.
-  map.fitBounds(bounds);
 
   self.locations = ko.observableArray(locations);
   self.topPicks = ko.observableArray();
@@ -56,6 +65,14 @@ var ViewModel = function() {
     }
   };
 
+  // Remove all Foursquare top picks.
+  self.removeTopPicks = function() {
+    ko.utils.arrayForEach(self.topPicks(), function(venue) {
+      self.hideMarker(venue.marker);
+    });
+    self.topPicks.removeAll();
+  }
+
   self.search = function(data, event) {
     var input = document.getElementById("myInput");
     var filter = input.value.toUpperCase();
@@ -65,10 +82,10 @@ var ViewModel = function() {
     // Loop through all list items, and hide those who don't match the search query.
     for (var i = 0; i < a.length; i++) {
       if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
-        a[i].style.display = "";
+        locations[i].visible(true);
         self.showMarker(locations[i].marker);
       } else {
-        a[i].style.display = "none";
+        locations[i].visible(false);
         self.hideMarker(locations[i].marker);
       }
     }
@@ -83,14 +100,17 @@ var ViewModel = function() {
     var div = document.getElementById("myLocations");
     var a = div.getElementsByTagName("a");
     for (var i = 0; i < a.length; i++) {
-      a[i].style.display = "";
-      $(a[i]).removeClass("active");
+      locations[i].visible(true);
+      locations[i].active(false);
       self.showMarker(locations[i].marker);
       bounds.extend(locations[i].marker.position);
     }
 
     // Extend the boundaries of the map for each marker.
     map.fitBounds(bounds);
+
+    // Remove all Foursquare top picks.
+    self.removeTopPicks();
 
     // Reset input field.
     var input = document.getElementById("myInput");
@@ -101,9 +121,6 @@ var ViewModel = function() {
       infowindow.close();
       infowindow.marker = null;
     }
-
-    // Remove all foursquare top picks.
-    self.topPicks.removeAll();
   };
 
   // Show infowindow.
@@ -114,10 +131,14 @@ var ViewModel = function() {
         infowindow.marker.setAnimation(null);
       }
       infowindow.marker = marker;
-      infowindow.setContent("<b>" + marker.title + "</b><br>" + 
-        locations[marker.id].fact + 
-        " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">" + 
-        locations[marker.id].source_name + "</a>.");
+      if (marker.id > 0) {
+        infowindow.setContent("<b>" + marker.title + "</b><br>" + 
+          locations[marker.id].fact + 
+          " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">" + 
+          locations[marker.id].source_name + "</a>.");
+      } else {
+        infowindow.setContent("<b>" + marker.title + "</b>");
+      }
       infowindow.open(map, marker);
       marker.setAnimation(google.maps.Animation.BOUNCE);
 
@@ -140,20 +161,29 @@ var ViewModel = function() {
     var a = div.getElementsByTagName("a");
     for (var i = 0; i < a.length; i++) {
       if (i == index) {
-        $(a[i]).addClass("active");
+        locations[i].active(true);
         self.showMarker(locations[i].marker);
       } else {
-        a[i].style.display = "none";
-        $(a[i]).removeClass("active");
+        locations[i].visible(false);
+        locations[i].active(false);
         self.hideMarker(locations[i].marker);
       }
     }
     
-    // Zoom, set marker as center, and show infowindow.
-    map.setCenter(item.marker.getPosition());
-    map.setZoom(16);
+    // Show infowindow.
     self.showInfoWindow(item.marker);
-    
+
+    // Zoom, set marker as center.
+    map.setCenter(item.marker.position);
+    map.setZoom(24);
+
+    // Reset bounds.
+    bounds = new google.maps.LatLngBounds();
+    bounds.extend(item.marker.position);
+
+    // Remove all Foursquare top picks.
+    self.removeTopPicks();
+
     // Get 5 top picks from Foursquare.
     var foursquareUrl = "https://api.foursquare.com/v2/venues/";
     var foursquareParams = $.param({
@@ -165,65 +195,63 @@ var ViewModel = function() {
       "&locale=en&limit=5&section=topPicks&venuePhotos=1";
     var url = foursquareUrl + query + "&" + foursquareParams;
 
-    self.topPicks.removeAll();
     $.getJSON(url, function(result, status) {
       $.each(result.response.venues, function(i, venue) {
+        // Add "active" property.
+        venue.active = ko.observable(false);
+
+        // Get position.
+        var position = new google.maps.LatLng(venue.location.lat, venue.location.lng);
+
+        // Create a marker for this location.
+        var marker = new google.maps.Marker({
+          map: map,
+          position: position,
+          title: venue.name,
+          animation: google.maps.Animation.DROP,
+          icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+          id: -1
+        });
+
+        // Extends this bounds to contain the given point.
+        bounds.extend(marker.position);
+
+        // Extend the boundaries of the map for each marker.
+        map.fitBounds(bounds);
+
+        // Keep marker object into venue.
+        venue.marker = marker;
+
+        // Add click listener to the marker.
+        venue.marker.addListener("click", function() {
+          self.showInfoWindow(venue.marker);
+        });
+
+        // Populate topPicks array.
         self.topPicks.push(venue);
       });
     });
   };
 
   // Show foursquare top pick info window.
-  self.showTopPick = function(item, event) {
+  self.showTopPickInfo = function(item, event) {
     // Get current item index.
     var context = ko.contextFor(event.target);
     var index = context.$index();
 
+    // Activate or not list item.
     var div = document.getElementById("myTopPicks");
     var a = div.getElementsByTagName("a");
     for (var i = 0; i < a.length; i++) {
       if (i == index) {
-        $(a[i]).addClass('active');
+        self.topPicks()[i].active(true);
       } else {
-        $(a[i]).removeClass('active');
+        self.topPicks()[i].active(false);
       }
     }
 
-    var position = new google.maps.LatLng(item.location.lat, item.location.lng);
-
-    // Create a marker for this location.
-    var marker = new google.maps.Marker({
-      map: map,
-      position: position,
-      title: item.name,
-      animation: google.maps.Animation.DROP,
-      icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
-    });
-
-    var infowindow = new google.maps.InfoWindow({
-      marker: marker,
-      content: item.name
-    });
-    infowindow.open(map, marker);
-
-    item.marker = marker;
-    item.infowindow = infowindow;
-  };
-
-  // Clear foursquare top pick info window.
-  self.clearTopPick = function(item, event) {
-    // Get current item index.
-    var context = ko.contextFor(event.target);
-    var index = context.$index();
-
-    var div = document.getElementById("myTopPicks");
-    var a = div.getElementsByTagName("a");
-    $(a[i]).removeClass("active");
-
-    item.infowindow.marker = null;
-    item.infowindow = null;
-    item.marker.setMap(null);
-    item.marker = null;
+    // Show infowindow.
+    self.showInfoWindow(item.marker);
   };
 };
 
