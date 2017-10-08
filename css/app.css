@@ -10,7 +10,7 @@ body {
   background-color: #f6f6f6 !important;
 }
 
-.content {
+main {
   margin: 12px 0;
 }
 
@@ -27,7 +27,8 @@ body {
   width: 100%; 
   font-size: 16px; 
   padding: 12px 20px 12px 40px; 
-  border: 1px solid #ddd; 
+  border: 1px solid #ddd;
+  margin-right: 12px; 
 }
 
 p.subtitle {
@@ -49,11 +50,15 @@ p.subtitle {
   height: 100%;
 }
 
-.footer {
+.infowindow_content {
+  margin: 6px 0;
+}
+
+footer {
   border-top: 1px solid black;
 }
 
-.footer p {
+footer p {
   margin-top: 3px;
   font-size: 12px;
 }

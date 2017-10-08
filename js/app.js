@@ -1,68 +1,123 @@
-/*
-locations ou self.locations
-*/
-
 var ViewModel = function() {
   var self = this;
+  var map = {};
+  var bounds = {};
+  var infowindow = {};
 
-  // Create map.
-  var map = new google.maps.Map(document.getElementById("myMap"), {
-    zoom: 10,
-    center: new google.maps.LatLng(0, 0),
-    mapTypeId: google.maps.MapTypeId.ROADMAP,
-  });
+  self.searchField = ko.observable("");
+  self.locations = ko.observableArray();
+  self.topPicks = ko.observableArray();
+  self.warningMessage = ko.observable();
 
-  // Instantiate some objects.
-  var infowindow = new google.maps.InfoWindow();
-  var bounds = new google.maps.LatLngBounds();
-
-  // Create marker for each location.
-  for (var i = 0; i < locations.length; i++) {
-    // Add "visible" and "active" properties to location.
-    locations[i].visible = ko.observable(true);
-    locations[i].active = ko.observable(false);
-
+  // Create and return marker.
+  self.createMarker = function(title, content, position, color, id) {
     // Create a marker for this location.
     var marker = new google.maps.Marker({
       map: map,
-      position: locations[i].position,
-      title: locations[i].title,
+      position: position,
+      title: title,
       animation: google.maps.Animation.DROP,
-      id: i
+      icon: "http://maps.google.com/mapfiles/ms/icons/" + color + "-dot.png",
+      id: id
     });
+
+    // Keep content string and color into marker.
+    // Red is location, green for topPick.
+    marker.content = content;
+    marker.color = color;
 
     // Extends this bounds to contain the given point.
     bounds.extend(marker.position);
 
-    // Keep marker object into location.
-    locations[i].marker = marker;
-  }
-
-  // Extend the boundaries of the map for each marker.
-  map.fitBounds(bounds);
-
-  // Add click listener to the marker.
-  locations.forEach(function(location) {
-    location.marker.addListener("click", function() {
-      self.showInfoWindow(location.marker);
+    // Add click listener.
+    marker.addListener("click", function() {
+      self.showLocationInfoFromMarker(marker);
     });
-  });
 
-  self.locations = ko.observableArray(locations);
-  self.topPicks = ko.observableArray();
+    return marker;
+  };
+
+  // Reset the user interface.
+  self.reset = function() {
+    // Reset search field.
+    self.searchField("");
+
+    // Create map.
+    map = new google.maps.Map(document.getElementById("myMap"), {
+      zoom: 10,
+      center: new google.maps.LatLng(0, 0),
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
+    });
+
+    // Instantiate some objects.
+    bounds = new google.maps.LatLngBounds();
+    infowindow = new google.maps.InfoWindow();
+
+    self.locations.removeAll();
+
+    // Create marker for each location.
+    for (var i = 0; i < locations.length; i++) {
+      var location = locations[i];
+
+      var title = location.title;
+      var content = location.fact + " <a href=\"" + 
+                    location.source_url + "\" target=\"_blank\">" + 
+                    location.source_name + "</a>.";
+      var position = location.position;
+
+      // Create a marker for this location.
+      var marker = self.createMarker(title, content, position, "red", i);
+
+      // Keep marker object into location.
+      location.marker = marker;
+
+      // Add "visible" and "active" properties to location.
+      location.visible = ko.observable(true);
+      location.active = ko.observable(false);
+
+      // Populate locations array.
+      self.locations.push(location);
+    }
+
+    // Extend the boundaries of the map for each marker.
+    map.fitBounds(bounds);
+
+    google.maps.event.addDomListener(window, "resize", function() {
+      map.fitBounds(bounds); 
+    });
+    
+    self.removeTopPicks();
+    self.warningMessage = ko.observable("");
+  };
 
   // Show marker on google map.
   self.showMarker = function(marker) {
     if (marker) {
-      marker.setMap(map);
+      marker.setVisible(true);
     }
   };
 
   // Show marker on google map.
   self.hideMarker = function(marker) {
     if (marker) {
-      marker.setMap(null);
+      marker.setVisible(false);
     }
+  };
+
+  // Filter the location list.
+  self.search = function(data, event) {
+    var filter = self.searchField().toUpperCase();
+
+    // Loop through all list items, and hide those who don't match the search query.
+    ko.utils.arrayForEach(self.locations(), function(location) {
+      if (location.title.toUpperCase().indexOf(filter) > -1) {
+        location.visible(true);
+        self.showMarker(location.marker);
+      } else {
+        location.visible(false);
+        self.hideMarker(location.marker);
+      }
+    });
   };
 
   // Remove all Foursquare top picks.
@@ -71,76 +126,30 @@ var ViewModel = function() {
       self.hideMarker(venue.marker);
     });
     self.topPicks.removeAll();
-  }
-
-  self.search = function(data, event) {
-    var input = document.getElementById("myInput");
-    var filter = input.value.toUpperCase();
-    var div = document.getElementById("myLocations");
-    var a = div.getElementsByTagName("a");
-
-    // Loop through all list items, and hide those who don't match the search query.
-    for (var i = 0; i < a.length; i++) {
-      if (a[i].innerHTML.toUpperCase().indexOf(filter) > -1) {
-        locations[i].visible(true);
-        self.showMarker(locations[i].marker);
-      } else {
-        locations[i].visible(false);
-        self.hideMarker(locations[i].marker);
-      }
-    }
-  };
- 
-  // Reset the user interface.
-  self.reset = function() {
-    // Reset bounds.
-    bounds = new google.maps.LatLngBounds();
-
-    // Show all locations from the list.
-    var div = document.getElementById("myLocations");
-    var a = div.getElementsByTagName("a");
-    for (var i = 0; i < a.length; i++) {
-      locations[i].visible(true);
-      locations[i].active(false);
-      self.showMarker(locations[i].marker);
-      bounds.extend(locations[i].marker.position);
-    }
-
-    // Extend the boundaries of the map for each marker.
-    map.fitBounds(bounds);
-
-    // Remove all Foursquare top picks.
-    self.removeTopPicks();
-
-    // Reset input field.
-    var input = document.getElementById("myInput");
-    input.value = "";
-    
-    // Close infowindow.
-    if (infowindow) {
-      infowindow.close();
-      infowindow.marker = null;
-    }
   };
 
   // Show infowindow.
-  // Check to make sure the infowindow is not already opened on this marker.
   self.showInfoWindow = function(marker) {
+    // Check to make sure the infowindow is not already opened on this marker.
     if (infowindow.marker != marker) {
+      // Stop animation of previous infowindow marker.
       if (infowindow.marker) {
         infowindow.marker.setAnimation(null);
       }
-      infowindow.marker = marker;
-      if (marker.id > 0) {
-        infowindow.setContent("<b>" + marker.title + "</b><br>" + 
-          locations[marker.id].fact + 
-          " <a href=\"" + locations[marker.id].source_url + "\" target=\"_blank\">" + 
-          locations[marker.id].source_name + "</a>.");
+
+      // Set content of infowindow.
+      if (marker.content) {
+        infowindow.setContent("<b>" + marker.title + "</b><div class=\"infowindow_content\">" + marker.content + "</div>");
       } else {
-        infowindow.setContent("<b>" + marker.title + "</b>");
+        infowindow.setContent(marker.title);
       }
+
+      // Open infowindow and start marker animatiion.
       infowindow.open(map, marker);
       marker.setAnimation(google.maps.Animation.BOUNCE);
+
+      // Keep marker into infowindow.
+      infowindow.marker = marker;
 
       // Make sure the marker property is cleared if the infowindow is closed.
       infowindow.addListener("closeclick", function() {
@@ -150,36 +159,44 @@ var ViewModel = function() {
     } 
   };
 
-  // Show location info window.
-  self.showLocationInfo = function(item, event) {
-    // Get current item index.
-    var context = ko.contextFor(event.target);
-    var index = context.$index();
-
-    // Show or hide list item.
-    var div = document.getElementById("myLocations");
-    var a = div.getElementsByTagName("a");
-    for (var i = 0; i < a.length; i++) {
-      if (i == index) {
-        locations[i].active(true);
-        self.showMarker(locations[i].marker);
-      } else {
-        locations[i].visible(false);
-        locations[i].active(false);
-        self.hideMarker(locations[i].marker);
-      }
+  // Show location info window from marker.
+  self.showLocationInfoFromMarker = function(marker) {    
+    // Location or Foursquare top pick.
+    if (marker.color == "red") {
+      self.showLocationInfo(marker.id);
+    } else {
+      self.showTopPickInfo(marker.id);
     }
+  };
+
+  // Show location info window.
+  self.showLocationInfo = function(index) {
+    // Reset search field.
+    self.searchField("");
+    
+    // Show or hide list item.
+    ko.utils.arrayForEach(self.locations(), function(location) {
+      if (location.marker.id == index) {
+        location.visible(true);
+        location.active(true);
+        self.showMarker(location.marker);
+      } else {
+        location.visible(false);
+        location.active(false);
+        self.hideMarker(location.marker);
+      }
+    });
     
     // Show infowindow.
-    self.showInfoWindow(item.marker);
+    self.showInfoWindow(locations[index].marker);
 
-    // Zoom, set marker as center.
-    map.setCenter(item.marker.position);
+    // Set marker as center and zoom.
+    map.setCenter(locations[index].marker.position);
     map.setZoom(24);
 
     // Reset bounds.
     bounds = new google.maps.LatLngBounds();
-    bounds.extend(item.marker.position);
+    bounds.extend(locations[index].marker.position);
 
     // Remove all Foursquare top picks.
     self.removeTopPicks();
@@ -191,8 +208,9 @@ var ViewModel = function() {
         "client_secret": "TFBK2JIU1YMZDMEJ2OL3F41P1Q0QSI051XWXBHTLO5JMSUX2",
         "v": "20161016"
     });
-    var query = "search?ll=" + this.position.lat + "," + this.position.lng + 
-      "&locale=en&limit=5&section=topPicks&venuePhotos=1";
+
+    var query = "search?ll=" + locations[index].position.lat + "," + locations[index].position.lng + 
+      "&locale=en&limit=5&section=topPicks";
     var url = foursquareUrl + query + "&" + foursquareParams;
 
     $.getJSON(url, function(result, status) {
@@ -203,63 +221,88 @@ var ViewModel = function() {
         // Get position.
         var position = new google.maps.LatLng(venue.location.lat, venue.location.lng);
 
+        // Get image.
+        var icon = venue.categories[0].icon;
+        var content = "<img style=\"float: left; margin: 0px 5px 5px 0px;\" src=\"" + 
+                      icon.prefix + "bg_32" + icon.suffix + "\">";
+        content += venue.categories[0].name;
+
+        if (venue.location.address) {
+          content += "<br>Address: " + venue.location.address;
+        }
+        
+        if (venue.contact.formattedPhone) {
+          content += "<br>Phone: " + venue.contact.formattedPhone;
+        }
+        
+        if (venue.contact.facebookUsername) {
+          content += "<br>Facebook: <a href=\"https://www.facebook.com/" + 
+                      venue.contact.facebookUsername + "\" target=\"_blank\">" + 
+                      venue.contact.facebookUsername + "</a>";
+        }
+        
+        if (venue.contact.instagram) {
+          content += "<br>Instagram: <a href=\"https://www.instagram.com/" + 
+                      venue.contact.instagram + "\" target=\"_blank\">" + 
+                      venue.contact.instagram + "</a>";
+        }
+
         // Create a marker for this location.
-        var marker = new google.maps.Marker({
-          map: map,
-          position: position,
-          title: venue.name,
-          animation: google.maps.Animation.DROP,
-          icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
-          id: -1
-        });
-
-        // Extends this bounds to contain the given point.
-        bounds.extend(marker.position);
-
-        // Extend the boundaries of the map for each marker.
-        map.fitBounds(bounds);
+        var marker = self.createMarker(venue.name, content, position, "green", i);
 
         // Keep marker object into venue.
         venue.marker = marker;
 
-        // Add click listener to the marker.
-        venue.marker.addListener("click", function() {
-          self.showInfoWindow(venue.marker);
-        });
-
         // Populate topPicks array.
         self.topPicks.push(venue);
       });
+    })
+    .done(function() {
+      // Extend the boundaries of the map for each marker.
+      map.fitBounds(bounds);
+    })
+    .fail(function(jqxhr, textStatus, error) {
+      var err = textStatus + ", " + error;
+      self.warningMessage("Foursquare request failed! (" + err + ")");
+      $('#foursquareRequestFailed').modal('show');
     });
   };
 
   // Show foursquare top pick info window.
-  self.showTopPickInfo = function(item, event) {
-    // Get current item index.
-    var context = ko.contextFor(event.target);
-    var index = context.$index();
+  self.showTopPickInfo = function(index) {
+    // Reset search field.
+    self.searchField("");
 
-    // Activate or not list item.
-    var div = document.getElementById("myTopPicks");
-    var a = div.getElementsByTagName("a");
-    for (var i = 0; i < a.length; i++) {
-      if (i == index) {
-        self.topPicks()[i].active(true);
+    // Show or hide list item.
+    ko.utils.arrayForEach(self.topPicks(), function(venue) {
+      if (venue.marker.id == index) {
+        venue.active(true);
+        self.showInfoWindow(venue.marker);
       } else {
-        self.topPicks()[i].active(false);
+        venue.active(false);
       }
-    }
-
-    // Show infowindow.
-    self.showInfoWindow(item.marker);
+    });    
   };
+
+  // Reset the user interface.
+  self.reset();
 };
 
 // Listen for authentication errors.
+// If you want to programmatically detect an authentication failure (for example
+// to automatically send an beacon) you can prepare a callback function. If the 
+// following global function is defined it will be called when the authentication
+// fails.
+// See https://developers.google.com/maps/documentation/javascript/events#auth-errors
 var gm_authFailure = function() { 
   $("#myMap").html("<div class=\"alert alert-danger\" role=\"alert\">" + 
       "We had trouble loading Google Maps. Please refresh your browser and try again." + 
       "</div>");
+};
+
+// Error handling for Google Maps.
+var mapError = function() {
+  gm_authFailure();
 };
 
 var startApp = function() {
